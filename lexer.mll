@@ -25,6 +25,7 @@ rule token = parse
   | '('             { LPAREN }
   | ')'             { RPAREN }
   | ','             { COMMA }
+  | '.'             { POINT}
   | 'CURVEPOLYGON'        { CURVEPOLYGON  }
   | 'GEOMETRYCOLLECTION'  { GEOMETRYCOLLECTION } 
   | 'TIN'                 { TIN }
@@ -42,8 +43,6 @@ rule token = parse
   | 'LINESTRING'          { LINESTRING }
   | 'POINT'               { POINT }
   | nbr             { NBR (float_of_string (lexeme lexbuf))}
-  | const           { CONST (lexeme lexbuf) }
-  | var             { VAR (lexeme lexbuf) }
   | eof             { EOF }
 
 {
