@@ -1,5 +1,5 @@
 {
-  open Parser
+  open Parse_wkt
   open Lexing
 
   let incr_linenum lexbuf =
@@ -10,38 +10,37 @@
     }
 }
 
-let nbr = ['+' '-']?(['0' - '9']+(.['0' - '9']*)?|.['0' - '9']+)(['e' 'E']['+' '-' ]?['0' - '9']+)? ;
+let nbr = ['+' '-']?(['0' - '9']+('.'['0' - '9']*)?|'.'['0' - '9']+)(['e' 'E']['+' '-' ]?['0' - '9']+)? 
 
 
 rule token = parse
     '#' [^'\n']* '\n' { incr_linenum lexbuf; token lexbuf }
-  | '\n'            { incr_linenum lexbuf; token lexbuf }
-  | ['\t']      { token lexbuf }
-  | ' '             { SPACE}
-  | "EMPTY"         { EMPTY }
-  | "ZM"            { ZM  }
-  | "Z"             { Z } 
-  | "M"             { M } 
-  | '('             { LPAREN }
-  | ')'             { RPAREN }
-  | ','             { COMMA }
-  | '.'             { POINT}
-  | 'CURVEPOLYGON'        { CURVEPOLYGON  }
-  | 'GEOMETRYCOLLECTION'  { GEOMETRYCOLLECTION } 
-  | 'TIN'                 { TIN }
-  | 'POLYHEDRALSURFACE'   { POLYHEDRALSURFACE }
-  | 'MULTIPOLYGON'        { MULTIPOLYGON }
-  | 'MULTISURFACE'        { MULTISURFACE }
-  | 'MULTILINESTRING'     { MULTILINESTRING }
-  | 'MULTICURVE'          { MULTICURVE } 
-  | 'MULTIPOINT'          { MULTIPOINT }
-  | 'TRIANGLE'            { TRIANGLE }
-  | 'POLYGON'             { POLYGON }
-  | 'CURVEPOLYGON'        { CURVEPOLYGON }
-  | 'COMPOUNDCURVE'       { COMPOUNDCURVE }
-  | 'CIRCULARSTRING'      { CIRCULARSTRING }
-  | 'LINESTRING'          { LINESTRING }
-  | 'POINT'               { POINT }
+  | '\n'              { incr_linenum lexbuf; token lexbuf }
+  | ['\t']            { token lexbuf }
+  | "EMPTY"           { EMPTY }
+  | "ZM"              { ZM    }
+  | "Z"               { Z     } 
+  | "M"               { M     } 
+  | '('               { LPAREN }
+  | ')'               { RPAREN }
+  | ','                   { COMMA }
+  | '.'                   { POINT }
+  | "CURVEPOLYGON"        { CURVEPOLYGON  }
+  | "GEOMETRYCOLLECTION"  { GEOMETRYCOLLECTION } 
+  | "TIN"                 { TIN }
+  | "POLYHEDRALSURFACE"   { POLYHEDRALSURFACE }
+  | "MULTIPOLYGON"        { MULTIPOLYGON }
+  | "MULTISURFACE"        { MULTISURFACE }
+  | "MULTILINESTRING"     { MULTILINESTRING }
+  | "MULTICURVE"          { MULTICURVE } 
+  | "MULTIPOINT"          { MULTIPOINT }
+  | "TRIANGLE"            { TRIANGLE }
+  | "POLYGON"             { POLYGON }
+  | "CURVEPOLYGON"        { CURVEPOLYGON }
+  | "COMPOUNDCURVE"       { COMPOUNDCURVE }
+  | "CIRCULARSTRING"      { CIRCULARSTRING }
+  | "LINESTRING"          { LINESTRING }
+  | "POINT"               { POINT }
   | nbr             { NBR (float_of_string (lexeme lexbuf))}
   | eof             { EOF }
 
