@@ -141,81 +141,135 @@ number :
 /*Ici gérer des listes...*/
 
 linestring_text :
-   | empty_set 		        {$1}
-   | LPAREN point  COMMA point  RPAREN {$1,$2}
+   | empty_set 		                                        {$1}
+   | LPAREN point    RPAREN                                     {$1}
+   | LPAREN point point_list RPAREN                             {$1::$2}
+
+point_list :
+   | COMMA point point_list                                     {$2::$3}
+   | COMMA point                                                {[$2]}
+   | empty_set                                                  {$1}
+
+ring_list:
+   | empty_set                                                  {$1}
+   | COMMA ring_text                                            {[|$2|]}
+   | COMMA ring_text ring_list                                  {[|$2::$3|]} 
+
+curve_list:
+   | empty_set                                                  {$1}
+   | COMMA curve_text                                           {[|$2|]}
+   | COMMA curve_text curve_list                                {$2::$3}
+
+linestring_list:
+   | empty_set                                                  {$1}
+   | COMMA linestring_text                                      {[|$2|]}
+   | COMMA linestring_text linestring_text                      {$2::$3}
+
+linestring_text_body_list :
+   | empty_set                                                  {$1}
+   | COMMA linestring_text_body                                 {[|$2|]}
+   | COMMA linestring_text_body linestring_text_body_list       {$2::$3}
+
+single_curve_list :
+   | empty_set                                                  {$1}
+   | COMMA single_curve_text                                    {[|$2|]}
+   | COMMA single_curve_text single_curve_list                  {$2:$3}
+
+surface_text_list:
+   | empty_set                                                  {$1}
+   | COMMA surface_text                                         {[|$2|]}
+   | COMMA surface_text surface_text_list                       {$2::$3}
+
+polygon_text_body_list:
+    | empty_set                                                 {$1}
+    | COMMA polygon_text_body                                   {[|$2|]}
+    | COMMA polygon_text_body polygon_text_body_list            {$1::$2}
+
+triangle_text_body_list:
+    | empty_set                                                 {$1}
+    | COMMA triangle_text_body                                  {[|$2|]}
+    | COMMA triangle_text_body triangle_text_body_list          {$1::$2}
+
+well_known_text_representation_list:
+     | empty_set                                                {$1}
+     | COMMA well_known_text_representation                     {[|$2|]}
+     | COMMA well_known_text_representation well_known_text_representation_list {$1::$2}
+
 
 circularstring_text :
-   | empty_set 		        {}
-   | LPAREN point  COMMA point  RPAREN {$1,$2}
+   | empty_set 		                                        {$1}
+   | LPAREN point  point_list  RPAREN                           {$1::$2}
 
 compoundcurve_text :
-   | empty_set 		        {}
-   | LPAREN single_curve_text  COMMA single_curve_text  RPAREN {}
+   | empty_set 		                                        {$1}
+   | LPAREN single_curve_text  single_curve_list  RPAREN        {$1::$3}
 
 single_curve_text :
-   | linestring_text_body 		        {$1}
-   | circularstring_text_representation		{$1}
+   | linestring_text_body 		                        {$1}
+   | circularstring_text_representation		                {$1}
 
 curve_text :
-   | linestring_text_body 		        {$1}
-   | circularstring_text_representation 	{$1}
-   |  compoundcurve_text_representation		{$1}
+   | linestring_text_body 		                        {$1}
+   | circularstring_text_representation 	                {$1}
+   |  compoundcurve_text_representation		                {$1}
 
 ring_text :
-   | linestring_text_body 		        {$1}
-   | circularstring_text_representation 	{$1}
-   | compoundcurve_text_representation		{$1}
+   | linestring_text_body 		                        {$1}
+   | circularstring_text_representation 	                {$1}
+   | compoundcurve_text_representation		                {$1}
 
 surface_text :
-   | CURVEPOLYGON curvepolygon_text_body 	{CURVEPOLYGON $2}
-   | polygon_text_body		                {$1}
+   | CURVEPOLYGON curvepolygon_text_body 	                {CURVEPOLYGON $2}
+   | polygon_text_body		                                {$1}
 
 curvepolygon_text :
-   | empty_set 		                        {}
-   | LPAREN ring_text  COMMA ring_text  RPAREN  {}
+   | empty_set 		                                        {$1}
+   | LPAREN ring_text  ring_list  RPAREN                        {$2::$3}
 
 polygon_text :
-   | empty_set 		                        {}
-   | LPAREN linestring_text  COMMA linestring_text  RPAREN {}
+   | empty_set 		                                        {$1}
+   | LPAREN linestring_text  linestring_list  RPAREN            {$2::$3}
 
 triangle_text :
-    | empty_set		                        {}
-    | LPAREN linestring_text RPAREN		{}
+    | empty_set		                                        {$1}
+    | LPAREN linestring_text RPAREN		                {}
 
 multipoint_text :
-    | empty_set		                        {}
-    | LPAREN point_text  COMMA point_text  RPAREN {}
+    | empty_set		                                        {$1}
+    | LPAREN point_text  point_list   RPAREN                    {$2::$3}
 
 multicurve_text :
-    | empty_set		                        {}
-    | LPAREN curve_text  COMMA curve_text  RPAREN {}
+    | empty_set		                                        {$1}
+    | LPAREN curve_text  curve_list  RPAREN                     {$2::$3}
+
+(*TODO  gérer les listes*)
 
 multilinestring_text :
-    | empty_set		                        {}
-    | LPAREN linestring_text_body  COMMA linestring_text_body  RPAREN {}
+    | empty_set		                                        {$1}
+    | LPAREN linestring_text_body  linestring_text_body_list  RPAREN {$2::$3}
 
 multisurface_text :
-    | empty_set		                        {}
-    | LPAREN surface_text  COMMA surface_text  RPAREN {}
+    | empty_set		                                        {$1}
+    | LPAREN surface_text  surface_text_list  RPAREN            {$2::$3}
 
 multipolygon_text :
-    | empty_set		                        {}
-    | LPAREN polygon_text_body  COMMA polygon_text_body  RPAREN {}
+    | empty_set		                                        {$1}
+    | LPAREN polygon_text_body  polygon_text_body_list  RPAREN  {$2::$3}
 
 polyhedralsurface_text :
-    | empty_set		                        {}
-    | LPAREN polygon_text_body  COMMA polygon_text_body  RPAREN {}
+    | empty_set		                                        {$1}
+    | LPAREN polygon_text_body  polygon_text_body_list  RPAREN  {$2::$3}
 
 tin_text :
-    | empty_set		                        {}
-    | LPAREN triangle_text_body  COMMA triangle_text_body  RPAREN {}
+    | empty_set		                                        {$1}
+    | LPAREN triangle_text_body  triangle_text_body_list RPAREN {$2::$3}
 
 geometrycollection_text :
-    | empty_set		                        {}
-    | LPAREN well_known_text_representation  COMMA well_known_text_representation  RPAREN {}
+    | empty_set		                                        {$1}
+    | LPAREN well_known_text_representation  well_known_text_representation_list  RPAREN {$2::$3}
 
 empty_set : 
-        EMPTY {EMPTY}
+        EMPTY {[||]}
 
 z_m :
        | ZM  {ZM}

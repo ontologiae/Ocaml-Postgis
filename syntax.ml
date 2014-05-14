@@ -14,6 +14,7 @@ type wkt =
 | CIRCULARSTRING of 
 | LINESTRING of float array array
 | POINT of float array
+| NBR   of float 
 
 and
 z_m = 
