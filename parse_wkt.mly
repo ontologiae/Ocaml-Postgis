@@ -30,7 +30,7 @@ curve_text_representation :
  |   compoundcurve_text_representation   {$1}
 
 linestring_text_representation :
- |   LINESTRING  linestring_text_body           {LINESTRING}
+ |   LINESTRING  linestring_text_body           {LINESTRING(None,$2)}
  |   LINESTRING z_m linestring_text_body        {LINESTRING(Some($2),$3)}
 
 circularstring_text_representation :
@@ -118,8 +118,8 @@ triangle_text_body :
         triangle_text           {$1}
 
 point_text :
-  |  empty_set 		{$1}
-  |  LPAREN point RPAREN		{$1}
+  |  empty_set 		        {$1}
+  |  LPAREN point RPAREN	{$1}
 
 point :
       |    x y                  {[$1;$2]}
@@ -138,16 +138,18 @@ m :
 number :
    | NBR {$1}
 
+/*Ici gérer des listes...*/
+
 linestring_text :
-   | empty_set 		{$1}
+   | empty_set 		        {$1}
    | LPAREN point  COMMA point  RPAREN {$1,$2}
 
 circularstring_text :
-   | empty_set 		{}
+   | empty_set 		        {}
    | LPAREN point  COMMA point  RPAREN {$1,$2}
 
 compoundcurve_text :
-   | empty_set 		{}
+   | empty_set 		        {}
    | LPAREN single_curve_text  COMMA single_curve_text  RPAREN {}
 
 single_curve_text :

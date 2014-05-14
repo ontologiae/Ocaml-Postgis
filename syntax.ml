@@ -1,0 +1,23 @@
+type wkt =
+| CURVEPOLYGON
+| GEOMETRYCOLLECTION
+| TIN
+| POLYHEDRALSURFACE
+| MULTIPOLYGON
+| MULTISURFACE
+| MULTILINESTRING
+| MULTICURVE
+| MULTIPOINT
+| TRIANGLE
+| POLYGON
+| COMPOUNDCURVE
+| CIRCULARSTRING of 
+| LINESTRING of float array array
+| POINT of float array
+
+and
+z_m = 
+       | ZM  
+       | Z   
+       | M   
+
