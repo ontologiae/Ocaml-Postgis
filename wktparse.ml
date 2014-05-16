@@ -1,6 +1,6 @@
-#load "syntax.cmo";;
+(*#load "syntax.cmo";;
 #load "lexer.cmo";;
-#load "parse_wkt_simple.cmo";;
+#load "parse_wkt_simple.cmo";;*)
 open Lexing;;
 exception Fatal_error of string;;
 
@@ -28,10 +28,10 @@ let syntax_error {lex_curr_p=pos} = string_of "Syntax error" pos;;
 let lexer = function str ->  lexer_from_string str;;
 let fatal_error msg = raise (Fatal_error msg);;
 
-#load "syntax.cmo";;
+(*#load "syntax.cmo";;
 #load "lexer.cmo";;
 #load "parse_wkt_simple.cmo";;
-
+*)
 
 let cmds lex =
         try

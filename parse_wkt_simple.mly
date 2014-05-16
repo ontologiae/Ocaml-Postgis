@@ -86,6 +86,9 @@ collection_text_representation :
  |  POLYHEDRALSURFACE  polyhedralsurface_text		        {POLYHEDRALSURFACE(None,$2)}
  |  TIN z_m tin_text	                        	        {TIN(Some($2),$3)}
  |  TIN  tin_text	                        	        {TIN(None,$2)}
+ |  GEOMETRYCOLLECTION z_m geometrycollection_text	        {GEOMETRYCOLLECTION(Some($2),$3) }
+ |  GEOMETRYCOLLECTION  geometrycollection_text	                {GEOMETRYCOLLECTION(None,$2)     }
+
 
 
 curve_text :
