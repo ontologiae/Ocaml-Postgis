@@ -1,5 +1,5 @@
 {
-  open Parse_wkt
+  open Parse_wkt_simple
   open Lexing
 
   let incr_linenum lexbuf =
@@ -10,13 +10,19 @@
     }
 }
 
-let nbr = ['+' '-']?(['0' - '9']+('.'['0' - '9']*)?|'.'['0' - '9']+)(['e' 'E']['+' '-' ]?['0' - '9']+)? 
+let int = '-'? ['0'-'9'] ['0'-'9']*
+let digit = ['0'-'9']
+let frac = '.' digit*
+let plusmoins = ['-' '+']?
+let exp = ['e' 'E'] ['-' '+']? digit+
+let nbr = plusmoins? digit* frac? exp?
+
 
 
 rule token = parse
     '#' [^'\n']* '\n' { incr_linenum lexbuf; token lexbuf }
   | '\n'              { incr_linenum lexbuf; token lexbuf }
-  | ['\t']            { token lexbuf }
+  | [' ' '\t']        { token lexbuf }
   | "EMPTY"           { EMPTY }
   | "ZM"              { ZM    }
   | "Z"               { Z     } 
@@ -24,7 +30,7 @@ rule token = parse
   | '('               { LPAREN }
   | ')'               { RPAREN }
   | ','                   { COMMA }
-  | '.'                   { POINT }
+
   | "CURVEPOLYGON"        { CURVEPOLYGON  }
   | "GEOMETRYCOLLECTION"  { GEOMETRYCOLLECTION } 
   | "TIN"                 { TIN }
@@ -36,13 +42,13 @@ rule token = parse
   | "MULTIPOINT"          { MULTIPOINT }
   | "TRIANGLE"            { TRIANGLE }
   | "POLYGON"             { POLYGON }
-  | "CURVEPOLYGON"        { CURVEPOLYGON }
+
   | "COMPOUNDCURVE"       { COMPOUNDCURVE }
   | "CIRCULARSTRING"      { CIRCULARSTRING }
   | "LINESTRING"          { LINESTRING }
   | "POINT"               { POINT }
-  | nbr             { NBR (float_of_string (lexeme lexbuf))}
-  | eof             { EOF }
+  | nbr                   { NBR (float_of_string (lexeme lexbuf))}
+  (*| eof             { EOF }*)
 
 {
 }

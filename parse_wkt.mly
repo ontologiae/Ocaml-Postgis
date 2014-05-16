@@ -25,6 +25,7 @@ point_text_representation :
        | POINT  z_m  point_text                                 {POINT(Some($2),$3)}
        | POINT  point_text                                      {POINT(None,$2)}
 
+// Start -> 2
 curve_text_representation :
  |   linestring_text_representation                             {$1}
  |   circularstring_text_representation                         {$1}
@@ -42,6 +43,7 @@ compoundcurve_text_representation :
  |   COMPOUNDCURVE  compoundcurve_text                          {COMPOUNDCURVE(None,$2)}
  |   COMPOUNDCURVE  z_m compoundcurve_text                      {COMPOUNDCURVE(Some($2),$3)}
 
+// Start -> 3
 surface_text_representation :
  |   curvepolygon_text_representation	                	{$1}
 
@@ -52,12 +54,15 @@ curvepolygon_text_representation :
  |   triangle_text_representation		                {$1}
 
 polygon_text_representation :
- |   POLYGON  polygon_text_body		                        {POLYGON(None,$2)}
- |   POLYGON  z_m  polygon_text_body		                {POLYGON(Some($2),$3)}
+ |   POLYGON  polygon_text		                        {POLYGON(None,$2)}
+ |   POLYGON  z_m  polygon_text         	                {POLYGON(Some($2),$3)}
 
 triangle_text_representation :
   |  TRIANGLE  z_m  triangle_text_body		                {TRIANGLE(Some($2),$3)}
   |  TRIANGLE  triangle_text_body		                {TRIANGLE(None,$2)}
+
+
+// Start -> 4
 
 collection_text_representation :
   |  multipoint_text_representation 		                {$1}
@@ -106,14 +111,14 @@ geometrycollection_text_representation :
   |  GEOMETRYCOLLECTION  geometrycollection_text	        {GEOMETRYCOLLECTION(None,$2)}
 
 
+
+// From Start -> 2
 linestring_text_body :
   |  linestring_text		                                {$1}
 
+// From Start -> 3
 curvepolygon_text_body :
   |  curvepolygon_text		                                {$1}
-
-polygon_text_body :
-  |  polygon_text		                                {$1}
 
 triangle_text_body :
         triangle_text                                           {$1}
@@ -142,58 +147,58 @@ number :
 /*Ici gérer des listes...*/
 
 linestring_text :
-   | empty_set 		                                        {$1}
-   | LPAREN point    RPAREN                                     {$2}
+   | empty_set 		                                        {[$1]} // vector list
+   | LPAREN point    RPAREN                                     {[$2]}
    | LPAREN point point_list RPAREN                             {$2::$3}
 
 point_list :
    | COMMA point point_list                                     {$2::$3}
    | COMMA point                                                {[$2]}
-   | empty_set                                                  {$1}
+   | empty_set                                                  {[$1]}
 
 ring_list:
    | empty_set                                                  {$1}
-   | COMMA ring_text                                            {[|$2|]}
-   | COMMA ring_text ring_list                                  {[|$2::$3|]} 
+   | COMMA ring_text                                            {[$2]}
+   | COMMA ring_text ring_list                                  {$2::$3}
 
 curve_list:
    | empty_set                                                  {$1}
-   | COMMA curve_text                                           {[|$2|]}
+   | COMMA curve_text                                           {[$2]}
    | COMMA curve_text curve_list                                {$2::$3}
 
-linestring_list:
-   | empty_set                                                  {$1}
-   | COMMA linestring_text                                      {[|$2|]}
-   | COMMA linestring_text linestring_text                      {$2::$3}
+linestring_list: // vector list list
+   | empty_set                                                  {$1} 
+   | COMMA linestring_text                                      {$2}
+   | COMMA linestring_text linestring_list                      {$2::$3}
 
 linestring_text_body_list :
    | empty_set                                                  {$1}
-   | COMMA linestring_text_body                                 {[|$2|]}
+   | COMMA linestring_text_body                                 {[$2]}
    | COMMA linestring_text_body linestring_text_body_list       {$2::$3}
 
 single_curve_list :
    | empty_set                                                  {$1}
-   | COMMA single_curve_text                                    {[|$2|]}
+   | COMMA single_curve_text                                    {[$2]}
    | COMMA single_curve_text single_curve_list                  {$2:$3}
 
 surface_text_list:
    | empty_set                                                  {$1}
-   | COMMA surface_text                                         {[|$2|]}
+   | COMMA surface_text                                         {[$2]}
    | COMMA surface_text surface_text_list                       {$2::$3}
 
-polygon_text_body_list:
+/*polygon_text_body_list:
     | empty_set                                                 {$1}
-    | COMMA polygon_text_body                                   {[|$2|]}
-    | COMMA polygon_text_body polygon_text_body_list            {$2::$3}
+    | COMMA polygon_text                                       {[$2]}
+    | COMMA polygon_text polygon_text_body_list                   {$2::$3}*/
 
 triangle_text_body_list:
-    | empty_set                                                 {$1}
-    | COMMA triangle_text_body                                  {[|$2|]}
+    | empty_set                                                 {[$1]}
+    | COMMA triangle_text_body                                  {[$2]}
     | COMMA triangle_text_body triangle_text_body_list          {$2::$3}
 
 well_known_text_representation_list:
      | empty_set                                                {$1}
-     | COMMA well_known_text_representation                     {[|$2|]}
+     | COMMA well_known_text_representation                     {[$2]}
      | COMMA well_known_text_representation well_known_text_representation_list {$2::$3}
 
 
@@ -221,19 +226,19 @@ ring_text :
 
 surface_text :
    | CURVEPOLYGON curvepolygon_text_body 	                {CURVEPOLYGON $2}
-   | polygon_text_body		                                {$1}
+   | polygon_text		                                {VECTOR $1}
 
 curvepolygon_text :
    | empty_set 		                                        {$1}
    | LPAREN ring_text  ring_list  RPAREN                        {$2::$3}
 
-polygon_text :
+polygon_text : //vector list list list
    | empty_set 		                                        {$1}
-   | LPAREN linestring_text  linestring_list  RPAREN            {$2::$3}
+   | LPAREN linestring_text linestring_list RPAREN              {$2::$3}
 
 triangle_text :
     | empty_set		                                        {$1}
-    | LPAREN linestring_text RPAREN		                {}
+    | LPAREN linestring_text RPAREN		                {$2}
 
 multipoint_text :
     | empty_set		                                        {$1}
@@ -251,14 +256,15 @@ multilinestring_text :
 multisurface_text :
     | empty_set		                                        {$1}
     | LPAREN surface_text  surface_text_list  RPAREN            {$2::$3}
+    // wkt list
 
-multipolygon_text :
+multipolygon_text : //vector list list list list
     | empty_set		                                        {$1}
-    | LPAREN polygon_text_body  polygon_text_body_list  RPAREN  {$2::$3}
+    | LPAREN polygon_text    RPAREN                             {$2}
 
-polyhedralsurface_text :
+polyhedralsurface_text : //vector list list list list mais devrait être vector list list
     | empty_set		                                        {$1}
-    | LPAREN polygon_text_body  polygon_text_body_list  RPAREN  {$2::$3}
+    | LPAREN polygon_text    RPAREN                             {$2}
 
 tin_text :
     | empty_set		                                        {$1}
@@ -269,7 +275,7 @@ geometrycollection_text :
     | LPAREN well_known_text_representation  well_known_text_representation_list  RPAREN {$2::$3}
 
 empty_set : 
-        EMPTY {[||]}
+        EMPTY {[]}
 
 z_m :
        | ZM  {ZM}
