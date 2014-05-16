@@ -1,5 +1,5 @@
 {
-  open Parse_wkt_simple
+  open Parse_wkt
   open Lexing
 
   let incr_linenum lexbuf =
