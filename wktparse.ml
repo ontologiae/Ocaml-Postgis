@@ -35,7 +35,7 @@ let fatal_error msg = raise (Fatal_error msg);;
 
 let cmds lex =
         try
-                Parse_wkt_simple.well_known_text_representation Lexer.token lex
+                Parse_wkt.well_known_text_representation Lexer.token lex
         with
         | Failure("lexing : empty token")
         | Parsing.Parse_error -> fatal_error (syntax_error lex);;
