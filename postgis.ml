@@ -1,4 +1,4 @@
-#require "postgresql";;
+(*#require "postgresql";;*)
 open Postgresql
 
 type pgis = [ `Postgis | `Brut ];;
