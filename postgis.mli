@@ -27,5 +27,5 @@ val get_all_with_format :
         [> `Postgis ] array -> Postgresql.result -> typed_result
         array array
 val string_of_geom : Syntax.wkt -> string
-val quick_request : Postgresql.connection -> operations -> typed_result array array
+val static_request : Postgresql.connection -> operations -> typed_result array array
 

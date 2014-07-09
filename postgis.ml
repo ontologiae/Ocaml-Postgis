@@ -89,19 +89,24 @@ let get_all_with_format type_array (result : Postgresql.result)  =
 let string_of_geom g =
         Syntax.to_string g
 
-let quick_request (conn : Postgresql.connection)  operations =
-        let select1 geom op = "SELECT ST_ASText("^op^"('"^(Syntax.to_string geom)^"'))" in
-        let select2 geom geom2 op = "SELECT ST_ASText("^op^"('"^(Syntax.to_string geom)^"','"^(Syntax.to_string geom2)^"'))" in
-        let select3 geom geom2 f op = "SELECT ST_ASText('"^op^"("^(Syntax.to_string geom)^"','"^(Syntax.to_string geom2)^"',"^(string_of_float f)^"))" in
+let static_request (conn : Postgresql.connection)  operations =
+        let tos geom = "'"^(Syntax.to_string geom)^"'::geometry" in
+        let select1 geom op at = 
+                let astext = match at with true -> "ST_ASText" | false -> "" in
+                                        "SELECT "^astext^"("^op^"("^(tos geom)^"))" in
+        let select2 geom geom2 op at = let astext = match at with true -> "ST_ASText" | false -> "" in
+                                        "SELECT "^astext^"("^op^"("^(tos geom)^","^(tos geom2)^"))" in
+        let select3 geom geom2 f op at = let astext = match at with true -> "ST_ASText" | false -> "" in
+                                        "SELECT "^astext^"("^op^"("^(tos geom)^","^(tos geom2)^","^(string_of_float f)^"))" in
         let req =
                 match operations with
-                | Center g              -> select1 g "ST_centroid"
-                | Intersect(g1,g2)      -> select2 g1 g2 "ST_Intersects"
-                | Crosses(g1,g2)        -> select2 g1 g2 "ST_Crosses"
-                | Within(g1,g2)         -> select2 g1 g2 "ST_Within"
-                | Distance(g1,g2)       -> select2 g1 g2 "ST_Distance"
-                | IsAtDistance(g1,g2,f) -> select3 g1 g2 f "ST_DWithin"
-                | Length  g             -> select1 g "ST_Length"
+                | Center g              -> select1 g "ST_centroid" true
+                | Intersect(g1,g2)      -> select2 g1 g2 "ST_Intersects" false
+                | Crosses(g1,g2)        -> select2 g1 g2 "ST_Crosses" false
+                | Within(g1,g2)         -> select2 g1 g2 "ST_Within" false
+                | Distance(g1,g2)       -> select2 g1 g2 "ST_Distance" false
+                | IsAtDistance(g1,g2,f) -> select3 g1 g2 f "ST_DWithin" false
+                | Length  g             -> select1 g "ST_Length" false
         in 
         conn#exec req |> get_all 
 
