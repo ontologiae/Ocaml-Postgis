@@ -31,17 +31,31 @@ let convertFromPgType exc valu pgty =
                     | TIMETZ | TIMESTAMPTZ | TIMESTAMP | TIME           -> Date valu
                     | NUMERIC | FLOAT8 | FLOAT4 | CASH                  -> Num (float_of_string valu)
                     | CHAR                                              -> Char (String.get valu 0)
-                    | BOOL                                              -> Bool (bool_of_string valu)
+                    | BOOL                                              -> (match valu with | "t" -> Bool true | "f" -> Bool false | _ -> Bool false)
                     | BYTEA                                             -> Blob valu
                     | _                                                 -> failwith "non géré"
                  );;
 
 
 
-let get_all_with_type (result : Postgresql.result)=
+let convertTry valu pgty =
+        match pgty with
+         | TEXT                                              -> (try Postgis (Wktparse.parse valu) with e -> Text valu)
+         | CSTRING | VARCHAR                                 -> Text valu
+         | INT4 | INT8  | OID | XID | CID                    -> Int (int_of_string valu)
+         | TIMETZ | TIMESTAMPTZ | TIMESTAMP | TIME           -> Date valu
+         | NUMERIC | FLOAT8 | FLOAT4 | CASH                  -> Num (float_of_string valu)
+         | CHAR                                              -> Char (String.get valu 0)
+         | BOOL                                              -> (match valu with | "t" -> Bool true | "f" -> Bool false | _ -> Bool false)
+         | BYTEA                                             -> Blob valu
+         | _                                                 -> failwith "non géré"
+
+
+
+let get_all (result : Postgresql.result)=
             let nfields = result#nfields in
             let contruitLigne nligne = Array.init nfields (fun t -> let pgt = result#ftype t in
-                                         { value  = convertFromPgType `Brut (result#getvalue nligne t ) pgt;
+                                         { value  = convertTry (result#getvalue nligne t ) pgt;
                                            pgtype = pgt;
                                          } ) in
             let nbligne = result#ntuples in
