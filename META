@@ -1,0 +1,3 @@
+version = "0.1.0"
+archive(byte) = "lexer.cmo,parse_wkt.cmo,wktparse.cmo,postgis.cmo"
+archive(native) = "lexer.cmx,parse_wkt.cmx,wktparse.cmx,postgis.cmx"
