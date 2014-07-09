@@ -15,6 +15,17 @@ type ocaml_result_type =
         | Blob of string 
         | Null
 
+
+type operations =
+        | Center        of Syntax.wkt
+        | Intersect     of Syntax.wkt * Syntax.wkt
+        | Crosses       of Syntax.wkt * Syntax.wkt
+        | Within        of Syntax.wkt * Syntax.wkt
+        | Distance      of Syntax.wkt * Syntax.wkt
+        | IsAtDistance  of Syntax.wkt * Syntax.wkt * float
+        | Length        of Syntax.wkt
+
+
 type typed_result = {
         value : ocaml_result_type;
         pgtype : ftype
@@ -74,4 +85,23 @@ let get_all_with_format type_array (result : Postgresql.result)  =
             Array.init nbligne (fun t -> contruitLigne t)
 
 
+
+let string_of_geom g =
+        Syntax.to_string g
+
+let quick_request (conn : Postgresql.connection)  operations =
+        let select1 geom op = "SELECT ST_ASText("^op^"('"^(Syntax.to_string geom)^"'))" in
+        let select2 geom geom2 op = "SELECT ST_ASText("^op^"('"^(Syntax.to_string geom)^"','"^(Syntax.to_string geom2)^"'))" in
+        let select3 geom geom2 f op = "SELECT ST_ASText('"^op^"("^(Syntax.to_string geom)^"','"^(Syntax.to_string geom2)^"',"^(string_of_float f)^"))" in
+        let req =
+                match operations with
+                | Center g              -> select1 g "ST_centroid"
+                | Intersect(g1,g2)      -> select2 g1 g2 "ST_Intersects"
+                | Crosses(g1,g2)        -> select2 g1 g2 "ST_Crosses"
+                | Within(g1,g2)         -> select2 g1 g2 "ST_Within"
+                | Distance(g1,g2)       -> select2 g1 g2 "ST_Distance"
+                | IsAtDistance(g1,g2,f) -> select3 g1 g2 f "ST_DWithin"
+                | Length  g             -> select1 g "ST_Length"
+        in 
+        conn#exec req |> get_all 
 
