@@ -1,3 +1,33 @@
+module Syntax :
+        sig
+                type vector = V of float list
+                and wkt =
+                          | CURVEPOLYGON of z_m option * wkt list
+                          | GEOMETRYCOLLECTION of z_m option * wkt list
+                          | TIN of z_m option * vector list list
+                          | POLYHEDRALSURFACE of z_m option * wkt list
+                          | MULTIPOLYGON of z_m option * wkt list
+                          | MULTISURFACE of z_m option * wkt list
+                          | MULTILINESTRING of z_m option * vector list list
+                          | MULTICURVE of z_m option * wkt list
+                          | MULTIPOINT of z_m option * vector list
+                          | TRIANGLE of z_m option * vector list
+                          | POLYGON of z_m option * vector list list
+                          | COMPOUNDCURVE of z_m option * wkt list
+                          | CIRCULARSTRING of z_m option * vector list
+                          | LINESTRING of z_m option * vector list
+                          | POINT of z_m option * vector
+                          | VECTOR of vector
+                          | NBR of float
+                and z_m = ZM | Z | M
+
+                val to_vect : vector -> string
+                val to_nbr : float -> string
+                val of_zm : z_m option -> string
+                val vectlist_to_string : vector list -> string
+                val to_string : wkt -> string
+        end
+
 type pgis = [ `N | `Postgis ]
 type ocaml_result_type =
         Text of string
@@ -11,7 +41,7 @@ type ocaml_result_type =
               | Blob of string
               | Null
 type operations =
-        Center of Syntax.wkt
+              | Center of Syntax.wkt
               | Intersect of Syntax.wkt * Syntax.wkt
               | Crosses of Syntax.wkt * Syntax.wkt
               | Within of Syntax.wkt * Syntax.wkt

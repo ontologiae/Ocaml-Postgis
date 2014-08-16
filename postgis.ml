@@ -1,6 +1,13 @@
 (*#require "postgresql";;*)
+module Syntax = struct 
+        include Syntax
+end
+
+open Syntax
+
 open Postgresql
 
+type wkt = Syntax.wkt
 type pgis = [ `Postgis | `N ];;
 
 type ocaml_result_type =
@@ -10,20 +17,20 @@ type ocaml_result_type =
         | Num  of float
         | Char of char
         | Bool of bool
-        | Postgis of Syntax.wkt
+        | Postgis of wkt
         | NumRange of float * float
         | Blob of string 
         | Null
 
 
 type operations =
-        | Center        of Syntax.wkt
-        | Intersect     of Syntax.wkt * Syntax.wkt
-        | Crosses       of Syntax.wkt * Syntax.wkt
-        | Within        of Syntax.wkt * Syntax.wkt
-        | Distance      of Syntax.wkt * Syntax.wkt
-        | IsAtDistance  of Syntax.wkt * Syntax.wkt * float
-        | Length        of Syntax.wkt
+        | Center        of wkt
+        | Intersect     of wkt * wkt
+        | Crosses       of wkt * wkt
+        | Within        of wkt * wkt
+        | Distance      of wkt * wkt
+        | IsAtDistance  of wkt * wkt * float
+        | Length        of wkt
 
 
 type typed_result = {
@@ -87,10 +94,10 @@ let get_all_with_format type_array (result : Postgresql.result)  =
 
 
 let string_of_geom g =
-        Syntax.to_string g
+        to_string g
 
 let static_request (conn : Postgresql.connection)  operations =
-        let tos geom = "'"^(Syntax.to_string geom)^"'::geometry" in
+        let tos geom = "'"^(to_string geom)^"'::geometry" in
         let select1 geom op at = 
                 let astext = match at with true -> "ST_ASText" | false -> "" in
                                         "SELECT "^astext^"("^op^"("^(tos geom)^"))" in

@@ -21,26 +21,31 @@ top:
 
 
 byte:
-	ocamllex.opt lexer.mll
+	ocamlfind ocamlc -c -thread -package batteries -package postgresql -o postgis.cmi postgis.mli
+	ocamllex.opt -q lexer.mll
 	ocamlyacc parse_wkt.mly
-	ocamlc.opt -c -o syntax.cmo syntax.ml
-	ocamlc.opt -c -o parse_wkt.cmi parse_wkt.mli
-	ocamlc.opt -c -o lexer.cmo lexer.ml
-	ocamlc.opt -c -o parse_wkt.cmo parse_wkt.ml
-	ocamlfind ocamlc -c -linkall -thread -linkpkg -package batteries,postgresql syntax.cmo parse_wkt.cmo lexer.cmo wktparse.ml -o wktparse.cmo
-	ocamlfind ocamlc -c -linkall -thread -linkpkg -package batteries,postgresql syntax.cmo parse_wkt.cmo lexer.cmo wktparse.cmo postgis.mli
-	ocamlfind ocamlc -c -linkall -thread -linkpkg -package batteries,postgresql syntax.cmo parse_wkt.cmo lexer.cmo wktparse.cmo postgis.ml -o postgis.cmo
+	ocamlfind ocamlc -c -thread -package batteries -package postgresql -o syntax.cmo syntax.ml
+	ocamlfind ocamlc -c -thread -package batteries -package postgresql -o parse_wkt.cmi parse_wkt.mli
+	ocamlfind ocamlc -c -thread -package batteries -package postgresql -o lexer.cmo lexer.ml
+	ocamlfind ocamlc -c -thread -package batteries -package postgresql -o wktparse.cmo wktparse.ml
+	ocamlfind ocamlc -c -thread -package batteries -package postgresql -o postgis.cmo postgis.ml
+	ocamlfind ocamlc -c -thread -package batteries -package postgresql -o parse_wkt.cmo parse_wkt.ml
+	ocamlfind ocamlc -a -thread -package batteries -package postgresql syntax.cmo parse_wkt.cmo lexer.cmo wktparse.cmo postgis.cmo -o postgis.cma
 
 opt:
+	ocamlfind ocamlc -c -thread -package batteries -package postgresql -o postgis.cmi postgis.mli
+	ocamlfind ocamlc -c -thread -package batteries -package postgresql -o syntax.cmo syntax.ml
 	ocamllex.opt lexer.mll
 	ocamlyacc parse_wkt.mly
-	ocamlopt.opt -c -o syntax.cmx syntax.ml
-	ocamlopt.opt -c -o parse_wkt.cmi parse_wkt.mli
-	ocamlopt.opt -c -o lexer.cmx lexer.ml
-	ocamlopt.opt -c -o wktparse.cmx wktparse.ml
-	ocamlopt.opt -c -o parse_wkt.cmx parse_wkt.ml
-	ocamlfind ocamlopt -c -linkall -thread -linkpkg -package batteries,postgresql syntax.cmx parse_wkt.cmx lexer.cmx wktparse.cmx postgis.mli
-	ocamlfind ocamlopt -c -linkall -thread -linkpkg -package batteries,postgresql syntax.cmx parse_wkt.cmx lexer.cmx wktparse.cmx postgis.ml 
+	ocamlfind ocamlc -c -thread -package batteries -package postgresql -o parse_wkt.cmi parse_wkt.mli
+	ocamlfind ocamlc -c -thread -package batteries -package postgresql -o lexer.cmo lexer.ml
+	ocamlfind ocamlc -c -thread -package batteries -package postgresql -o wktparse.cmo wktparse.ml
+	ocamlfind ocamlopt -c -thread -package batteries -package postgresql -o syntax.cmx syntax.ml
+	ocamlfind ocamlopt -c -thread -package batteries -package postgresql -o parse_wkt.cmx parse_wkt.ml
+	ocamlfind ocamlopt -c -thread -package batteries -package postgresql -o lexer.cmx lexer.ml
+	ocamlfind ocamlopt -c -thread -package batteries -package postgresql -o wktparse.cmx wktparse.ml
+	ocamlfind ocamlopt -c -thread -package batteries -package postgresql -o postgis.cmx postgis.ml
+	ocamlfind ocamlopt -a -thread -package batteries -package postgresql syntax.cmx parse_wkt.cmx lexer.cmx wktparse.cmx postgis.cmx -o postgis.cmxa
 
 
 #native:
@@ -70,10 +75,11 @@ html:
 #	$(OCAMLBUILD) -clean
 
 clean:
-		rm -f *~ *.cm[iox] *.o
+		rm -f *~ *.cm[ioxa] *.o *.cmxa
 		rm -rf html
 install:
-		ocamlfind install postgis META *.mli *.ml *.cm[iox] *.o
+		ocamlfind install postgis META postgis.cma postgis.cmxa *.cmi *.mli *.a
+		#*.cm[iox] *.o
 uninstall:
 		ocamlfind remove postgis
 
