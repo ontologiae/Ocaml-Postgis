@@ -40,14 +40,20 @@ type ocaml_result_type =
               | NumRange of float * float
               | Blob of string
               | Null
+
+val get_wkt : ocaml_result_type -> Syntax.wkt
+
+type distance = float and angle = float
+              
 type operations =
-              | Center of Syntax.wkt
-              | Intersect of Syntax.wkt * Syntax.wkt
-              | Crosses of Syntax.wkt * Syntax.wkt
-              | Within of Syntax.wkt * Syntax.wkt
-              | Distance of Syntax.wkt * Syntax.wkt
-              | IsAtDistance of Syntax.wkt * Syntax.wkt * float
-              | Length of Syntax.wkt
+              | Center          of Syntax.wkt
+              | Intersect       of Syntax.wkt * Syntax.wkt
+              | Crosses         of Syntax.wkt * Syntax.wkt
+              | Within          of Syntax.wkt * Syntax.wkt
+              | Distance        of Syntax.wkt * Syntax.wkt
+              | IsAtDistance    of Syntax.wkt * Syntax.wkt * float
+              | Projection      of Syntax.wkt * distance * angle
+              | Length          of Syntax.wkt
 type typed_result = { value : ocaml_result_type; pgtype : Postgresql.ftype; }
 val convertFromPgType :
         [> `Postgis ] -> string -> Postgresql.ftype -> ocaml_result_type
@@ -58,4 +64,20 @@ val get_all_with_format :
         array array
 val string_of_geom : Syntax.wkt -> string
 val static_request : Postgresql.connection -> operations -> typed_result array array
+
+
+module type STATICGEOM =
+  sig
+    val center : Postgresql.connection -> Syntax.wkt -> Syntax.wkt
+    val intersect : Postgresql.connection -> Syntax.wkt -> Syntax.wkt -> bool
+    val crosses : Postgresql.connection -> Syntax.wkt -> Syntax.wkt -> bool
+    val within : Postgresql.connection -> Syntax.wkt -> Syntax.wkt -> bool
+    val distance : Postgresql.connection -> Syntax.wkt -> Syntax.wkt -> float
+    val isAtDistance :
+      Postgresql.connection -> Syntax.wkt -> Syntax.wkt -> float -> bool
+    val projection :
+      Postgresql.connection -> Syntax.wkt -> distance -> angle -> Syntax.wkt
+    val length : Postgresql.connection -> Syntax.wkt -> float
+  end
+module StaticGeom : STATICGEOM
 

@@ -4,10 +4,9 @@ module Syntax = struct
 end
 
 open Syntax
-
+ 
 open Postgresql
 
-type wkt = Syntax.wkt
 type pgis = [ `Postgis | `N ];;
 
 type ocaml_result_type =
@@ -22,15 +21,16 @@ type ocaml_result_type =
         | Blob of string 
         | Null
 
+let get_wkt w = match w with
+                | Postgis wkt -> wkt
+                | _           -> failwith "Postgis.get_wkt : invalid argument"
 
-type operations =
-        | Center        of wkt
-        | Intersect     of wkt * wkt
-        | Crosses       of wkt * wkt
-        | Within        of wkt * wkt
-        | Distance      of wkt * wkt
-        | IsAtDistance  of wkt * wkt * float
-        | Length        of wkt
+type distance = float and angle = float
+
+
+
+
+
 
 
 type typed_result = {
@@ -93,27 +93,77 @@ let get_all_with_format type_array (result : Postgresql.result)  =
 
 
 
-let string_of_geom g =
-        to_string g
 
-let static_request (conn : Postgresql.connection)  operations =
-        let tos geom = "'"^(to_string geom)^"'::geometry" in
-        let select1 geom op at = 
-                let astext = match at with true -> "ST_ASText" | false -> "" in
-                                        "SELECT "^astext^"("^op^"("^(tos geom)^"))" in
-        let select2 geom geom2 op at = let astext = match at with true -> "ST_ASText" | false -> "" in
-                                        "SELECT "^astext^"("^op^"("^(tos geom)^","^(tos geom2)^"))" in
-        let select3 geom geom2 f op at = let astext = match at with true -> "ST_ASText" | false -> "" in
-                                        "SELECT "^astext^"("^op^"("^(tos geom)^","^(tos geom2)^","^(string_of_float f)^"))" in
-        let req =
-                match operations with
-                | Center g              -> select1 g "ST_centroid" true
-                | Intersect(g1,g2)      -> select2 g1 g2 "ST_Intersects" false
-                | Crosses(g1,g2)        -> select2 g1 g2 "ST_Crosses" false
-                | Within(g1,g2)         -> select2 g1 g2 "ST_Within" false
-                | Distance(g1,g2)       -> select2 g1 g2 "ST_Distance" false
-                | IsAtDistance(g1,g2,f) -> select3 g1 g2 f "ST_DWithin" false
-                | Length  g             -> select1 g "ST_Length" false
-        in 
-        conn#exec req |> get_all 
+
+module type STATICGEOM = sig
+
+
+        val center      : Postgresql.connection -> wkt -> wkt
+        val intersect   : Postgresql.connection -> wkt -> wkt -> bool
+        val crosses     : Postgresql.connection -> wkt -> wkt -> bool
+        val within      : Postgresql.connection -> wkt -> wkt -> bool
+        val distance    : Postgresql.connection -> wkt -> wkt -> float
+        val isAtDistance : Postgresql.connection -> wkt -> wkt -> float -> bool
+        val projection  : Postgresql.connection -> wkt -> distance -> angle -> wkt
+        val length      : Postgresql.connection -> wkt -> float
+
+               
+end;;
+
+module StaticGeom : STATICGEOM = 
+        
+         struct
+
+                        let tos geom = "'"^(to_string geom)^"'::geometry"
+
+                        let select1 geom op at = 
+                                let astext  = match at with true -> "ST_ASText" | false -> "" in
+                                "SELECT "^astext^"("^op^"("^(tos geom)^"))" 
+
+                        let select1_2 geom p1 p2 op at = 
+                                let astext = match at with true -> "ST_ASText" | false -> "" in
+                                "SELECT "^astext^"("^op^"("^(tos geom)^","^(string_of_float p1)^","^(string_of_float p2)^"))" 
+
+                        let select2 geom geom2 op at = let astext = match at with true -> "ST_ASText" | false -> "" in
+                                "SELECT "^astext^"("^op^"("^(tos geom)^","^(tos geom2)^"))" 
+
+                        let select3 geom geom2 f op at = let astext = match at with true -> "ST_ASText" | false -> "" in
+                                "SELECT "^astext^"("^op^"("^(tos geom)^","^(tos geom2)^","^(string_of_float f)^"))"
+
+                        let getBool w = match w with
+                        | Bool b -> b
+                        | _           -> failwith "Postgis.getBool : invalid argument"
+
+                        let getNum w = match w with
+                        | Num f -> f
+                        | _           -> failwith "Postgis.get_int : invalid argument"
+
+ 
+
+
+                let center (conn : Postgresql.connection) g                    = let r = select1 g "ST_centroid" true |> conn#exec |> get_all in
+                                                                                        get_wkt (Array.get (Array.get r 0) 0).value
+
+                let intersect (conn : Postgresql.connection) g1 g2             = let r = select2 g1 g2 "ST_Intersects" false |> conn#exec |> get_all in
+                                                                                        getBool (Array.get (Array.get r 0) 0).value
+
+                let crosses   (conn : Postgresql.connection) g1 g2             = let r = select2 g1 g2 "ST_Crosses" false |> conn#exec |> get_all in
+                                                                                        getBool (Array.get (Array.get r 0) 0).value
+
+                let within    (conn : Postgresql.connection) g1 g2             = let r = select2 g1 g2 "ST_Within" false |> conn#exec |> get_all in
+                                                                                        getBool (Array.get (Array.get r 0) 0).value
+
+                let distance  (conn : Postgresql.connection) g1 g2             = let r = select2 g1 g2 "ST_Distance" false |> conn#exec |> get_all in
+                                                                                        getNum (Array.get (Array.get r 0) 0).value
+
+                let isAtDistance (conn : Postgresql.connection) g1 g2 d        = let r = select3 g1 g2 d "ST_DWithin" false |> conn#exec |> get_all in
+                                                                                        getBool (Array.get (Array.get r 0) 0).value
+
+                let projection (conn : Postgresql.connection) g1 dst ang       = let r = select1_2 g1 dst ang "ST_Project" true |> conn#exec |> get_all in
+                                                                                        get_wkt (Array.get (Array.get r 0) 0).value
+
+                let length (conn : Postgresql.connection) g                    = let r = select1 g "ST_Length" false |> conn#exec |> get_all in
+                                                                                        getNum (Array.get (Array.get r 0) 0).value
+
+        end;;              
 
