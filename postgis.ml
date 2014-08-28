@@ -17,7 +17,7 @@ type ocaml_result_type =
         | Char of char
         | Bool of bool
         | Postgis of wkt
-        | NumRange of float * float
+        | NumRange of float * float (*TODO gérer les ouverts et les fermés*)
         | Blob of string 
         | Null
 
@@ -90,6 +90,28 @@ let get_all_with_format type_array (result : Postgresql.result)  =
                                          } ) in
             let nbligne = result#ntuples in
             Array.init nbligne (fun t -> contruitLigne t)
+
+
+
+
+let execute_req (connecteur : Postgresql.connection) req params =
+        let string_of_ocaml_result_type = function
+                 | Text t       -> t
+                 | Date d       -> d
+                 | Int  i       -> string_of_int i
+                 | Num  f       -> string_of_float f
+                 | Char c       -> String.make 1 c
+                 | Bool b       -> b |> string_of_bool |> String.capitalize
+                 | Postgis wkt  -> to_string wkt
+                 | NumRange (f1,f2) -> "["^(string_of_float f1)^","^(string_of_float f2)^"]"
+                 | Blob b       -> b
+                 | Null         -> "NULL" in
+        let paramsOK = List.map string_of_ocaml_result_type params |> Array.of_list in
+        let res =
+                try (*On l'exécute*)
+                        connecteur#exec ~params:paramsOK req
+                with Postgresql.Error a -> failwith ("SQL error : "^(Postgresql.string_of_error a)) in
+        get_all res
 
 
 

@@ -1,6 +1,6 @@
-#require "postgis";;
+(*#require "postgis";;
 #require "postgresql";;
-#require "benchmark";;
+#require "benchmark";;*)
 
 open Postgis
 
@@ -47,11 +47,49 @@ let r6 = Postgis.static_request conn t6;;
 let r7 = Postgis.static_request conn t7;;
 let r8 = Postgis.static_request conn t8;;
 
+(*
+ * φ = LATITUDE
+ * λ = LONGITUDE
+ar φ2 = asin( sin(φ1)*cos(d/R) + cos(φ1)*sin(d/R)*cos(brng) );
+var λ2 = λ1 + atan2( sin(brng)*sin(d/R)*cos(φ1), cos(d/R)-sin(φ1)*sin(φ2) );
+*)
+let project lat long angle distance =
+        let r = 6371009. in (*en mètre*)
+        let radian_to_degree r =  180.*.r /. 3.1415 in
+        let degree_to_radian d =  3.1415 *. d /. 180. in
+        let latrad  = degree_to_radian lat in
+        let longrad = degree_to_radian long in
+        let distance_angulaire = distance /. r in
+        let sin_distance_angulaire = sin distance_angulaire in
+        let cos_distance_angulaire = cos distance_angulaire in
+        let sin_latrad = sin latrad in
+        let cos_latrad = cos latrad in
+        let latrad2 = asin ( sin_latrad*.cos_distance_angulaire +. cos_latrad*.sin_distance_angulaire*.cos(angle) ) in
+        let longrad2 = longrad +. atan2 (sin(angle)*.sin_distance_angulaire*.cos_latrad) (cos_distance_angulaire-.sin_latrad*.sin(latrad2)) in
+        radian_to_degree latrad2, radian_to_degree longrad2;;
 
-(*let t0 = Benchmark.make 0L in
-        let r8 = for i = 1 to 1_000_000 do Postgis.static_request conn t8 done in
+
+ print_endline "Externe : 100 000";;
+ 
+let nbcycle s = let parit = 1_000_000. /. s in 2_000_000_000. /. parit;;
+ 
+ let t0 = Benchmark.make 0L in
+        let r8 = for i = 1 to 100_000 do Postgis.static_request conn t8 done in
         let b = Benchmark.sub (Benchmark.make 0L) t0 in
         print_endline "Benchmark results:";
-        print_endline (Benchmark.to_string b)  ;;
+        print_endline (Benchmark.to_string b);
+        print_endline ("Soit "^(nbcycle b.wall |> string_of_float)^" cycles par appel") ;;
 
-*)
+print_endline "Interne : 1 000 0000";;
+
+ let tt0 = Benchmark.make 0L in
+        let r8 = for i = 1 to 1_000_000 do project 47.2291439 (-1.5848751) 0.78537 0.1 done in
+        let b = Benchmark.sub (Benchmark.make 0L) tt0 in
+        print_endline "Benchmark results:";
+        print_endline (Benchmark.to_string b);
+        print_endline ("Soit "^(nbcycle b.wall |> string_of_float)^" cycles par appel") ;;
+
+
+  
+
+

@@ -45,15 +45,6 @@ val get_wkt : ocaml_result_type -> Syntax.wkt
 
 type distance = float and angle = float
               
-type operations =
-              | Center          of Syntax.wkt
-              | Intersect       of Syntax.wkt * Syntax.wkt
-              | Crosses         of Syntax.wkt * Syntax.wkt
-              | Within          of Syntax.wkt * Syntax.wkt
-              | Distance        of Syntax.wkt * Syntax.wkt
-              | IsAtDistance    of Syntax.wkt * Syntax.wkt * float
-              | Projection      of Syntax.wkt * distance * angle
-              | Length          of Syntax.wkt
 type typed_result = { value : ocaml_result_type; pgtype : Postgresql.ftype; }
 val convertFromPgType :
         [> `Postgis ] -> string -> Postgresql.ftype -> ocaml_result_type
@@ -62,8 +53,10 @@ val get_all : Postgresql.result -> typed_result array array
 val get_all_with_format :
         [> `Postgis ] array -> Postgresql.result -> typed_result
         array array
-val string_of_geom : Syntax.wkt -> string
-val static_request : Postgresql.connection -> operations -> typed_result array array
+        
+val execute_req :
+  Postgresql.connection ->
+  string -> ocaml_result_type list -> typed_result array array
 
 
 module type STATICGEOM =
